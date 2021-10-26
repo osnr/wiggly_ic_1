@@ -14,10 +14,17 @@ module tinyfpga_top (
     output logic PIN_4
   );
 
+    logic        rst;
+    logic [3:0]    rst_state = 0;
+    assign rst = !&rst_state;
+    always_ff @(posedge CLK) begin
+        rst_state <= rst_state + rst;
+    end
+    
     logic [7:0]  most_recent_kbd_data;
 
     top top_inst (
-      .clk(CLK), .rst('1),
+      .clk(CLK), .rst,
       .kbd_clk(PIN_11),
       .kbd_data(PIN_10),
       .most_recent_kbd_data
