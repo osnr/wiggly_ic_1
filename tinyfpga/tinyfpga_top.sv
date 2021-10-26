@@ -30,6 +30,6 @@ module tinyfpga_top (
       .most_recent_kbd_data
     );
 
-    assign {PIN_1, PIN_2, PIN_3, PIN_4} = most_recent_kbd_data[0:3];
+    assign {PIN_1, PIN_2, PIN_3, PIN_4} = {most_recent_kbd_data[0], most_recent_kbd_data[1], most_recent_kbd_data[2], most_recent_kbd_data[3]};
 
 endmodule // tinyfpga_top
