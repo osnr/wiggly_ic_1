@@ -7,7 +7,7 @@ SV_SRCS := $(shell find rtl -name '*.sv')
 
 obj_dir/main: verilator/main.cpp $(SV_SRCS)
 	verilator -Irtl -cc rtl/top.sv --exe verilator/main.cpp -o main \
-		-CFLAGS "$(shell sdl2-config --cflags) -g" \
+		-CFLAGS "$(shell sdl2-config --cflags) -g -fcoroutines-ts" \
 		-LDFLAGS "$(shell sdl2-config --libs)"
 	make -C ./obj_dir -f Vtop.mk
 
