@@ -11,10 +11,7 @@
 using std::cout;
 using std::endl;
 
-uint64_t _time; // in nanoseconds ?
-
-#define $start       $emit(std::nullptr_t) uint64_t _usleep_start
-#define $usleep(us)  _usleep_start = _time; while (_time < _usleep_start + us * 1000) $yield(nullptr)
+uint64_t _time = 0; // in nanoseconds
 
 class PS2Device {
 private:
@@ -24,15 +21,17 @@ private:
 public:
     bool clk, data;
 
-    PS2Device() {
-        co = this->loop();
-    };
-
-    #define usleep(us) co_await std::experimental::suspend_always{};
+    PS2Device() { co = this->loop(); };
+    
+    #define usleep(us)  do {\
+        uint64_t _usleep_start = _time;                         \
+        while (_time < _usleep_start + us * 1000)               \
+            co_await std::experimental::suspend_always{};       \
+      } while (0)
 
     resumable_thing loop() {
         while (true) {
-            if (codes_to_send.empty()) { clk = 1; data = 1; usleep(0); continue; }
+            if (codes_to_send.empty()) { clk = 1; data = 1; usleep(1); continue; }
 
             uint8_t code = codes_to_send.front(); codes_to_send.pop();
 
@@ -109,6 +108,8 @@ int main(int argc, char* argv[]) {
     top->eval();
 
     while (1) {
+        _time++;
+
         top->clk = 1;
 
         kbd(top->kbd_clk, top->kbd_data);
