@@ -155,8 +155,14 @@ int main(int argc, char* argv[]) {
     top->rst = 1;
     top->clk = 0;
     top->eval();
-    top->rst = 0;
+
+    top->clk = 1;
     top->eval();
+
+    top->clk = 0;
+    top->eval();
+
+    top->rst = 0;
 
     while (1) {
         _time++;
