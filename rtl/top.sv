@@ -1,10 +1,6 @@
 `default_nettype none
 `timescale 1ns / 1ps
 
-interface vga_i (
-);
-endinterface // vga_i
-
 module top (
   input logic        clk, rst,
                      
@@ -149,16 +145,6 @@ module top (
           mouse_x <= mouse_x + {'0, mouse_packet.x_movement};
           mouse_y <= mouse_y + {'0, mouse_packet.y_movement};
       end
-    
-    always_ff @(posedge clk) begin
-        // s[2] = "X";
-        // case (mouse_state)
-        //   START: s[2] = "0";
-        //   WILL_ENABLE_DATA_REPORTING: s[2] = "W";
-        //   SENT_ENABLE_DATA_REPORTING: s[2] = "S";
-        //   ACKNOWLEDGED_ENABLE_DATA_REPORTING: s[2] = "A";
-        // endcase
-    end
 
     // VGA
     simple_display_timings_480p display_timings_inst (
@@ -167,15 +153,18 @@ module top (
         .hsync(vga_hsync), .vsync(vga_vsync), .de(vga_de)
     );
     
-    // 32 x 32 pixel square
-    logic q_draw;
-    always_comb q_draw = (vga_sx < 32 && vga_sy < 32) ? 1 : 0;
     // always_comb q_draw = font[s[q_char[2:0]]][sy % 16][sx % 8];
-
     // VGA output
     always_ff @(posedge vga_clk_pix) begin
-        vga_r <= !vga_de ? 2'h0 : (q_draw ? 2'h0 : 2'h0);
-        vga_g <= !vga_de ? 2'h0 : (q_draw ? 2'h3 : 2'h0);
-        vga_b <= !vga_de ? 2'h0 : (q_draw ? 2'h0 : 2'h0);
+        vga_r = '0; vga_g = '0; vga_b = '0;
+        if (vga_de) begin
+            if (vga_sx < 32 && vga_sy < 32) begin
+                if (mouse_op.op == READ_PACKET0) begin
+                  vga_r = 2'h0; vga_g = 2'h0; vga_b = 2'h3;
+                end else begin
+                  vga_r = 2'h3; vga_g = 2'h0; vga_b = 2'h0;
+                end
+            end
+        end
     end
 endmodule
