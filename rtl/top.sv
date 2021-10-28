@@ -62,7 +62,8 @@ module top (
       );
 
 
-    typedef enum {READ_EXPECT, WRITE, READ0, READ1, READ2} mouse_opcode_t;
+    typedef enum {READ_EXPECT, WRITE,
+                  READ_PACKET0, READ_PACKET1, READ_PACKET2, DONE_PACKET} mouse_opcode_t;
     typedef logic [4:0] mouse_ops_idx_t;
     typedef struct packed {
         mouse_opcode_t op;
@@ -71,9 +72,8 @@ module top (
 
     mouse_ops_idx_t mouse_ops_idx;
     mouse_ops_idx_t mouse_ops_idx_next;
-
     always_ff @(posedge clk)
-        if (rst) mouse_ops_idx <= 0;
+        if (rst) mouse_ops_idx <= '0;
         else mouse_ops_idx <= mouse_ops_idx_next;
 
     mouse_op_t mouse_op;
@@ -86,9 +86,11 @@ module top (
         5'd04: mouse_op = {WRITE, 8'hF4};
         5'd05: mouse_op = {READ_EXPECT, 8'hFA};
 
-        5'd06: mouse_op = {READ0, 8'h00};
-        5'd07: mouse_op = {READ1, 8'h00};
-        5'd08: mouse_op = {READ2, 8'h00};
+        5'd06: mouse_op = {READ_PACKET0, 8'h00};
+        5'd07: mouse_op = {READ_PACKET1, 8'h00};
+        5'd08: mouse_op = {READ_PACKET2, 8'h00};
+
+        5'd09: mouse_op = {DONE_PACKET, 8'h00};
 
         default: mouse_op = {WRITE, 8'hFF}; // bad
       endcase
@@ -101,9 +103,14 @@ module top (
         logic [7:0]  x_movement, y_movement;
     } mouse_packet_t;
     mouse_packet_t mouse_packet;
+    mouse_packet_t mouse_packet_next;
+    always_ff @(posedge clk)
+        if (rst) mouse_packet <= '0;
+        else mouse_packet <= mouse_packet_next;
 
     always_comb begin
         mouse_ops_idx_next = mouse_ops_idx;
+        mouse_packet_next = mouse_packet;
         mouse_wr_ps2 = '0;
         mouse_din = '0;
         case (mouse_op.op)
@@ -116,23 +123,32 @@ module top (
           READ_EXPECT:
             if (mouse_rx_done_tick && mouse_dout == mouse_op.code)
               mouse_ops_idx_next = mouse_ops_idx + 1;
-          READ0:
+          READ_PACKET0:
             if (mouse_rx_done_tick) begin
-                mouse_packet[23:16] = mouse_dout;
+                mouse_packet_next = {mouse_dout, 8'h00, 8'h00};
                 mouse_ops_idx_next = mouse_ops_idx + 1;
             end
-          READ1:
+          READ_PACKET1:
             if (mouse_rx_done_tick) begin
-                mouse_packet[15:8] = mouse_dout;
+                mouse_packet_next = {mouse_packet[23:16], mouse_dout, 8'h00};
                 mouse_ops_idx_next = mouse_ops_idx + 1;
             end
-          READ2:
+          READ_PACKET2:
             if (mouse_rx_done_tick) begin
-                mouse_packet[7:0] = mouse_dout;
-                mouse_ops_idx_next = 5'd06; // HACK
+                mouse_packet_next = {mouse_packet[23:16], mouse_packet[15:8], mouse_dout};
+                mouse_ops_idx_next = mouse_ops_idx + 1;
             end
+          DONE_PACKET:
+            mouse_ops_idx_next = 5'd06; // HACK
         endcase
     end
+
+    logic [9:0] mouse_x, mouse_y;
+    always_ff @(posedge clk)
+      if (mouse_op.op == DONE_PACKET) begin
+          mouse_x <= mouse_x + {'0, mouse_packet.x_movement};
+          mouse_y <= mouse_y + {'0, mouse_packet.y_movement};
+      end
     
     always_ff @(posedge clk) begin
         // s[2] = "X";
