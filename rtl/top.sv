@@ -51,10 +51,11 @@ module top (
       );
 
 
-    struct      packed {
-        enum    {READ, WRITE, DONE} op;
+    typedef struct packed {
+        enum       {READ, WRITE, DONE} op;
         logic [7:0] code;
-        } [5:0] mouse_ops = {
+    } mouse_op_t;
+    mouse_op_t mouse_ops [0:5] = '{
                              {WRITE, 8'hFF},
                              {READ, 8'hFA},
                              {READ, 8'hAA},
@@ -65,29 +66,32 @@ module top (
     typedef logic [$clog2($size(mouse_ops) + 1) - 1:0] mouse_ops_idx_t;
     mouse_ops_idx_t mouse_ops_idx;
     mouse_ops_idx_t mouse_ops_idx_next;
+    
+    mouse_op_t mouse_op;
+    always_ff @(posedge clk)
+      mouse_op <= mouse_ops[mouse_ops_idx];
 
     always_ff @(posedge clk)
         if (rst) mouse_ops_idx <= 0;
         else mouse_ops_idx <= mouse_ops_idx_next;
-    // always_comb begin
-    //     mouse_state_next = mouse_state;
-    //     mouse_wr_ps2 = '0;
-    //     mouse_din = '0;
-    //     case (mouse_state)
-    //       START:
-    //         if (mouse_rx_done_tick && mouse_dout == 8'hAA)
-    //           mouse_state_next = WILL_ENABLE_DATA_REPORTING;
-    //       WILL_ENABLE_DATA_REPORTING: begin
-    //           mouse_wr_ps2 = '1;
-    //           mouse_din = 8'hF4;
-    //           if (mouse_tx_done_tick)
-    //             mouse_state_next = SENT_ENABLE_DATA_REPORTING;
-    //       end
-    //       SENT_ENABLE_DATA_REPORTING:
-    //         if (mouse_rx_done_tick && mouse_dout == 8'hFA)
-    //           mouse_state_next = ACKNOWLEDGED_ENABLE_DATA_REPORTING;
-    //     endcase
-    // end // always_comb
+    always_comb begin
+        mouse_ops_idx_next = mouse_ops_idx;
+        mouse_wr_ps2 = '0;
+        mouse_din = '0;
+        case (mouse_ops[mouse_ops_idx].op)
+          WRITE: begin
+              mouse_wr_ps2 = '1;
+              mouse_din = mouse_ops[mouse_ops_idx].code;
+              // if (mouse_tx_done_tick)
+                mouse_ops_idx_next = mouse_ops_idx + 1;
+          end
+          READ:
+            // if (mouse_rx_done_tick && mouse_dout == mouse_ops[mouse_ops_idx].code)
+              mouse_ops_idx_next = mouse_ops_idx + 1;
+          DONE:
+            ;
+        endcase
+    end
     
     always_ff @(posedge clk) begin
         // s[2] = "X";
