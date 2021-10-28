@@ -49,33 +49,45 @@ module top (
       .ps2d(mouse_data), .ps2c(mouse_clk),
       .tx_idle(mouse_tx_idle), .tx_done_tick(mouse_tx_done_tick)
       );
-    // http://www.sunburst-design.com/papers/CummingsSNUG2019SV_FSM1.pdf#page=10 (6.2)
-    enum        {START,
-                WILL_ENABLE_DATA_REPORTING,
-                SENT_ENABLE_DATA_REPORTING,
-                ACKNOWLEDGED_ENABLE_DATA_REPORTING} mouse_state, mouse_state_next;
+
+
+    struct      packed {
+        enum    {READ, WRITE, DONE} op;
+        logic [7:0] code;
+        } [5:0] mouse_ops = {
+                             {WRITE, 8'hFF},
+                             {READ, 8'hFA},
+                             {READ, 8'hAA},
+                             {READ, 8'h00},
+                             {WRITE, 8'hF4},
+                             {DONE, 8'h00}
+                             };
+    typedef logic [$clog2($size(mouse_ops) + 1) - 1:0] mouse_ops_idx_t;
+    mouse_ops_idx_t mouse_ops_idx;
+    mouse_ops_idx_t mouse_ops_idx_next;
+
     always_ff @(posedge clk)
-        if (rst) mouse_state <= START;
-        else mouse_state <= mouse_state_next;
-    always_comb begin
-        mouse_state_next = mouse_state;
-        mouse_wr_ps2 = '0;
-        mouse_din = '0;
-        case (mouse_state)
-          START:
-            if (mouse_rx_done_tick && mouse_dout == 8'hAA)
-              mouse_state_next = WILL_ENABLE_DATA_REPORTING;
-          WILL_ENABLE_DATA_REPORTING: begin
-              mouse_wr_ps2 = '1;
-              mouse_din = 8'hF4;
-              if (mouse_tx_done_tick)
-                mouse_state_next = SENT_ENABLE_DATA_REPORTING;
-          end
-          SENT_ENABLE_DATA_REPORTING:
-            if (mouse_rx_done_tick && mouse_dout == 8'hFA)
-              mouse_state_next = ACKNOWLEDGED_ENABLE_DATA_REPORTING;
-        endcase
-    end // always_comb
+        if (rst) mouse_ops_idx <= 0;
+        else mouse_ops_idx <= mouse_ops_idx_next;
+    // always_comb begin
+    //     mouse_state_next = mouse_state;
+    //     mouse_wr_ps2 = '0;
+    //     mouse_din = '0;
+    //     case (mouse_state)
+    //       START:
+    //         if (mouse_rx_done_tick && mouse_dout == 8'hAA)
+    //           mouse_state_next = WILL_ENABLE_DATA_REPORTING;
+    //       WILL_ENABLE_DATA_REPORTING: begin
+    //           mouse_wr_ps2 = '1;
+    //           mouse_din = 8'hF4;
+    //           if (mouse_tx_done_tick)
+    //             mouse_state_next = SENT_ENABLE_DATA_REPORTING;
+    //       end
+    //       SENT_ENABLE_DATA_REPORTING:
+    //         if (mouse_rx_done_tick && mouse_dout == 8'hFA)
+    //           mouse_state_next = ACKNOWLEDGED_ENABLE_DATA_REPORTING;
+    //     endcase
+    // end // always_comb
     
     always_ff @(posedge clk) begin
         // s[2] = "X";
