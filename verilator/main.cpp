@@ -36,7 +36,7 @@ public:
             while (codes_to_send.empty()) { clk = 1; data = 1; usleep(0); }
 
             uint8_t code = codes_to_send.front(); codes_to_send.pop();
-            cout << "0x" << std::hex << unsigned(code) << std::dec << endl;
+            // cout << "0x" << std::hex << unsigned(code) << std::dec << endl;
 
             // construct start bit, parity bit, stop bit
             bool start = 0;
@@ -62,7 +62,7 @@ public:
 
             int i = 0;
             for (const bool& bit : bits) {
-                cout << "bit" << i++ << " ";
+                // cout << "bit" << i++ << " ";
                 clk = 1;
                 usleep(20);
                 data = bit;
@@ -74,20 +74,18 @@ public:
 
             clk = 1;
             data = 1;
-            cout << "done" << endl;
+            // cout << "done" << endl;
             usleep(200);
         }
     }
 
-    void operator()(uint8_t& kbd_clk, uint8_t& kbd_data) {
+    void operator()(uint8_t& out_clk, uint8_t& out_data) {
         co.resume();
-        kbd_clk = clk; kbd_data = data;
+        out_clk = clk; out_data = data;
     }
 
     void send(uint8_t code) { codes_to_send.push(code); }
 };
-
-// FIXME: PS2Mouse
 
 class Vga {
 public:
@@ -145,7 +143,7 @@ int main(int argc, char* argv[]) {
     Verilated::traceEverOn(true);
     VerilatedVcdC* trace = new VerilatedVcdC;
 
-    PS2Device kbd;
+    PS2Device kbd, mouse;
     Vga vga;
 
     Vtop* top = new Vtop;
@@ -169,6 +167,7 @@ int main(int argc, char* argv[]) {
 
         top->clk = 1; top->vga_clk_pix = 1;
         kbd(top->kbd_clk, top->kbd_data); // input
+        mouse(top->mouse_clk, top->mouse_data); // input
         top->eval();
         trace->dump((vluint64_t) (10*_time));
 
@@ -189,10 +188,17 @@ int main(int argc, char* argv[]) {
                 if (e.type == SDL_KEYDOWN) {
                     kbd.send(0x15); // 'q' scancode
                     cout << "down" << endl;
+
                 } else if (e.type == SDL_KEYUP) {
                     kbd.send(0xF0); // BREAK scancode
                     kbd.send(0x15); // 'q' scancode
                     cout << "up" << endl;
+
+                } else if (e.type == SDL_MOUSEMOTION) {
+                    mouse.send(0b00001000);
+                    mouse.send(1);
+                    mouse.send(1);
+                    // cout << "mouse motion" << endl;
                 }
             }
             trace->flush();

@@ -48,7 +48,10 @@ module top (
     logic       mouse_tx_done_tick;
     // outputs of the fsm
     logic       mouse_wr_ps2;
-    logic [7:0] mouse_din; 
+    logic [7:0] mouse_din;
+`ifdef VERILATOR
+    assign mouse_tx_idle = '1;
+`else
     ps2tx mouse_tx (
       .clk(clk), .reset(rst),
       .wr_ps2(mouse_wr_ps2), .rx_idle(mouse_rx_idle),
@@ -56,7 +59,7 @@ module top (
       .ps2d(mouse_data), .ps2c(mouse_clk),
       .tx_idle(mouse_tx_idle), .tx_done_tick(mouse_tx_done_tick)
       );
-
+`endif
 
     typedef enum {READ_EXPECT, WRITE,
                   READ_PACKET0, READ_PACKET1, READ_PACKET2, DONE_PACKET} mouse_opcode_t;
@@ -147,11 +150,11 @@ module top (
     logic [9:0] mouse_x, mouse_y;
     always_ff @(posedge clk)
       if (rst) begin
-          mouse_x <= '0;
-          mouse_y <= '0;
+          mouse_x <= 10'd100;
+          mouse_y <= 10'd100;
       end else if (mouse_op.op == DONE_PACKET) begin
-          mouse_x <= mouse_x + 10'b1;
-          mouse_y <= mouse_y + 10'b1;
+          mouse_x <= mouse_x + 10'd1;
+          mouse_y <= mouse_y + 10'd1;
       end
 
     // VGA
@@ -163,10 +166,13 @@ module top (
     
     // always_comb q_draw = font[s[q_char[2:0]]][sy % 16][sx % 8];
     // VGA output
-    always_ff @(posedge vga_clk_pix) begin
+    always_comb begin
         vga_r = '0; vga_g = '0; vga_b = '0;
         if (vga_de) begin
-            if ((vga_sx < 32 && vga_sy < 32) || (vga_sx == mouse_x && vga_sy == mouse_y)) begin
+            if ((vga_sx < 32 && vga_sy < 32) ||
+                (mouse_x <= vga_sx && vga_sx <= mouse_x + 10 &&
+                 mouse_y <= vga_sy && vga_sy <= mouse_y + 10)) begin
+
                 if (mouse_op.op == READ_PACKET0) begin
                   vga_r = 2'h0; vga_g = 2'h0; vga_b = 2'h3;
                 end else begin
