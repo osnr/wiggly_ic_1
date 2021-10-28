@@ -6,7 +6,8 @@ module top (
 
   output logic [7:0] most_recent_kbd_data,
   
-  inout logic        kbd_clk, kbd_data
+  inout logic        kbd_clk, kbd_data,
+  inout logic        mouse_clk, mouse_data
   );
     // PS/2 keyboard input
     logic [7:0]      kbd_dout;
@@ -23,5 +24,66 @@ module top (
         if (kbd_rx_done_tick) begin
             most_recent_kbd_data <= kbd_dout;
         end
+    end
+
+    // PS/2 mouse
+    logic [7:0] mouse_dout;
+    logic       mouse_rx_done_tick;
+    logic       mouse_rx_idle, mouse_tx_idle;
+    ps2rx mouse_rx (
+      .clk(clk), .reset(rst),
+      .ps2d(mouse_data), .ps2c(mouse_clk),
+      .rx_en(mouse_tx_idle),
+
+      .rx_idle(mouse_rx_idle), .rx_done_tick(mouse_rx_done_tick),
+      .dout(mouse_dout)
+      );
+    logic       mouse_tx_done_tick;
+    // outputs of the fsm
+    logic       mouse_wr_ps2;
+    logic [7:0] mouse_din; 
+    ps2tx mouse_tx (
+      .clk(clk), .reset(rst),
+      .wr_ps2(mouse_wr_ps2), .rx_idle(mouse_rx_idle),
+      .din(mouse_din),
+      .ps2d(mouse_data), .ps2c(mouse_clk),
+      .tx_idle(mouse_tx_idle), .tx_done_tick(mouse_tx_done_tick)
+      );
+    // http://www.sunburst-design.com/papers/CummingsSNUG2019SV_FSM1.pdf#page=10 (6.2)
+    enum        {START,
+                WILL_ENABLE_DATA_REPORTING,
+                SENT_ENABLE_DATA_REPORTING,
+                ACKNOWLEDGED_ENABLE_DATA_REPORTING} mouse_state, mouse_state_next;
+    always_ff @(posedge clk)
+        if (rst) mouse_state <= START;
+        else mouse_state <= mouse_state_next;
+    always_comb begin
+        mouse_state_next = mouse_state;
+        mouse_wr_ps2 = '0;
+        mouse_din = '0;
+        case (mouse_state)
+          START:
+            if (mouse_rx_done_tick && mouse_dout == 8'hAA)
+              mouse_state_next = WILL_ENABLE_DATA_REPORTING;
+          WILL_ENABLE_DATA_REPORTING: begin
+              mouse_wr_ps2 = '1;
+              mouse_din = 8'hF4;
+              if (mouse_tx_done_tick)
+                mouse_state_next = SENT_ENABLE_DATA_REPORTING;
+          end
+          SENT_ENABLE_DATA_REPORTING:
+            if (mouse_rx_done_tick && mouse_dout == 8'hFA)
+              mouse_state_next = ACKNOWLEDGED_ENABLE_DATA_REPORTING;
+        endcase
+    end // always_comb
+    
+    always_ff @(posedge clk) begin
+        // s[2] = "X";
+        // case (mouse_state)
+        //   START: s[2] = "0";
+        //   WILL_ENABLE_DATA_REPORTING: s[2] = "W";
+        //   SENT_ENABLE_DATA_REPORTING: s[2] = "S";
+        //   ACKNOWLEDGED_ENABLE_DATA_REPORTING: s[2] = "A";
+        // endcase
     end
 endmodule
