@@ -92,8 +92,8 @@ public:
 class Vga {
 public:
     // screen dimensions
-    const int H_RES = 640;
-    const int V_RES = 480;
+    static const int H_RES = 640;
+    static const int V_RES = 480;
     typedef struct Pixel {  // for SDL texture
         uint8_t a;  // transparency
         uint8_t b;  // blue
@@ -102,10 +102,12 @@ public:
     } Pixel;
 
     SDL_Window*   sdl_window = NULL;
+    SDL_Renderer* sdl_renderer = NULL;
+    SDL_Texture*  sdl_texture  = NULL;
+
+    Pixel screenbuffer[H_RES*V_RES];
 
     Vga() {
-        SDL_Renderer* sdl_renderer = NULL;
-        SDL_Texture*  sdl_texture  = NULL;
         assert(SDL_Init(SDL_INIT_VIDEO) >= 0);
         assert(sdl_window = SDL_CreateWindow("Square", SDL_WINDOWPOS_CENTERED,
                                              SDL_WINDOWPOS_CENTERED, H_RES, V_RES, SDL_WINDOW_SHOWN));
@@ -113,6 +115,25 @@ public:
                                                  SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
         assert(sdl_texture = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGBA8888,
                                                SDL_TEXTUREACCESS_TARGET, H_RES, V_RES));
+    }
+
+    void operator()(Vtop* top) {
+        // update pixel if not in blanking interval
+        if (top->vga_de) {
+            Pixel* p = &screenbuffer[top->vga_sy*H_RES + top->vga_sx];
+            p->a = 0xFF;  // transparency
+            p->b = top->vga_b << 6;
+            p->g = top->vga_g << 6;
+            p->r = top->vga_r << 6;
+        }
+        
+        // update texture once per frame at start of blanking
+        if (top->vga_sy == V_RES && top->vga_sx == 0) {
+            SDL_UpdateTexture(sdl_texture, NULL, screenbuffer, H_RES*sizeof(Pixel));
+            SDL_RenderClear(sdl_renderer);
+            SDL_RenderCopy(sdl_renderer, sdl_texture, NULL, NULL);
+            SDL_RenderPresent(sdl_renderer);
+        }
     }
 };
 
@@ -140,14 +161,17 @@ int main(int argc, char* argv[]) {
     while (1) {
         _time++;
 
-        top->clk = 1;
-        kbd(top->kbd_clk, top->kbd_data);
+        top->clk = 1; top->vga_clk_pix = 1;
+        kbd(top->kbd_clk, top->kbd_data); // input
         top->eval();
         trace->dump((vluint64_t) (10*_time));
 
-        top->clk = 0;
+        top->clk = 0; top->vga_clk_pix = 0; 
         top->eval();
         trace->dump((vluint64_t) (10*_time + 5));
+
+        // output
+        vga(top);
 
         if (_time % 200 == 0) {
             char title_buf[500];

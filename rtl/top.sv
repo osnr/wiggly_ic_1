@@ -145,9 +145,8 @@ module top (
     end
 
     // VGA
-    logic hsync, vsync;
     simple_display_timings_480p display_timings_inst (
-        .clk_pix(vga_clk_pix), .rst,
+        .clk_pix(vga_clk_pix), .rst(rst),
         .sx(vga_sx), .sy(vga_sy),
         .hsync(vga_hsync), .vsync(vga_vsync), .de(vga_de)
     );
