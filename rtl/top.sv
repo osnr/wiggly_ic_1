@@ -69,7 +69,12 @@ module top (
     mouse_ops_idx_t mouse_ops_idx;
     mouse_ops_idx_t mouse_ops_idx_next;
     always_ff @(posedge clk)
-        if (rst) mouse_ops_idx <= '0;
+        if (rst)
+          `ifdef VERILATOR
+            mouse_ops_idx <= 5'd06; // skip to reading packets
+          `else
+            mouse_ops_idx <= '0;
+          `endif    
         else mouse_ops_idx <= mouse_ops_idx_next;
 
     mouse_op_t mouse_op;
@@ -101,8 +106,8 @@ module top (
     mouse_packet_t mouse_packet;
     mouse_packet_t mouse_packet_next;
     always_ff @(posedge clk)
-        if (rst) mouse_packet <= '0;
-        else mouse_packet <= mouse_packet_next;
+      if (rst) mouse_packet <= '0;
+      else mouse_packet <= mouse_packet_next;
 
     always_comb begin
         mouse_ops_idx_next = mouse_ops_idx;
@@ -141,9 +146,12 @@ module top (
 
     logic [9:0] mouse_x, mouse_y;
     always_ff @(posedge clk)
-      if (mouse_op.op == DONE_PACKET) begin
-          mouse_x <= mouse_x + {'0, mouse_packet.x_movement};
-          mouse_y <= mouse_y + {'0, mouse_packet.y_movement};
+      if (rst) begin
+          mouse_x <= '0;
+          mouse_y <= '0;
+      end else if (mouse_op.op == DONE_PACKET) begin
+          mouse_x <= mouse_x + 10'b1;
+          mouse_y <= mouse_y + 10'b1;
       end
 
     // VGA
@@ -158,7 +166,7 @@ module top (
     always_ff @(posedge vga_clk_pix) begin
         vga_r = '0; vga_g = '0; vga_b = '0;
         if (vga_de) begin
-            if (vga_sx < 32 && vga_sy < 32) begin
+            if ((vga_sx < 32 && vga_sy < 32) || (vga_sx == mouse_x && vga_sy == mouse_y)) begin
                 if (mouse_op.op == READ_PACKET0) begin
                   vga_r = 2'h0; vga_g = 2'h0; vga_b = 2'h3;
                 end else begin
