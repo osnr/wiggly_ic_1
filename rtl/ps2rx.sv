@@ -70,6 +70,8 @@ module ps2rx
          idle: begin
             rx_idle = 1'b1;
             if (fall_edge & rx_en) begin
+             $display("hello");
+
                // shift in start bit
                b_next = {ps2d, b_reg[10:1]};
                n_next = 4'b1001;
