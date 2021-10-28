@@ -89,19 +89,23 @@ public:
 
 // FIXME: PS2Mouse
 
-int main(int argc, char* argv[]) {
-    std::cout << "hello!" << std::endl;
+class Vga {
+public:
+    // screen dimensions
+    const int H_RES = 640;
+    const int V_RES = 480;
+    typedef struct Pixel {  // for SDL texture
+        uint8_t a;  // transparency
+        uint8_t b;  // blue
+        uint8_t g;  // green
+        uint8_t r;  // red
+    } Pixel;
 
-    Verilated::commandArgs(argc, argv);
-    Verilated::traceEverOn(true);
-    VerilatedVcdC* trace = new VerilatedVcdC;
+    SDL_Window*   sdl_window = NULL;
 
-    SDL_Window*   sdl_window   = NULL;
-    {
+    Vga() {
         SDL_Renderer* sdl_renderer = NULL;
         SDL_Texture*  sdl_texture  = NULL;
-        const int H_RES = 640;
-        const int V_RES = 480;
         assert(SDL_Init(SDL_INIT_VIDEO) >= 0);
         assert(sdl_window = SDL_CreateWindow("Square", SDL_WINDOWPOS_CENTERED,
                                              SDL_WINDOWPOS_CENTERED, H_RES, V_RES, SDL_WINDOW_SHOWN));
@@ -110,8 +114,18 @@ int main(int argc, char* argv[]) {
         assert(sdl_texture = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGBA8888,
                                                SDL_TEXTUREACCESS_TARGET, H_RES, V_RES));
     }
+};
+
+
+int main(int argc, char* argv[]) {
+    std::cout << "hello!" << std::endl;
+
+    Verilated::commandArgs(argc, argv);
+    Verilated::traceEverOn(true);
+    VerilatedVcdC* trace = new VerilatedVcdC;
 
     PS2Device kbd;
+    Vga vga;
 
     Vtop* top = new Vtop;
     top->trace(trace, 99);
@@ -138,7 +152,7 @@ int main(int argc, char* argv[]) {
         if (_time % 200 == 0) {
             char title_buf[500];
             snprintf(title_buf, sizeof(title_buf), "_time=%llu, most_recent_kbd_data=0x%x", _time, top->most_recent_kbd_data);
-            SDL_SetWindowTitle(sdl_window, title_buf);
+            SDL_SetWindowTitle(vga.sdl_window, title_buf);
 
             SDL_Event e;
             if (SDL_PollEvent(&e)) {
