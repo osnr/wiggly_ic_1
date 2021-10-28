@@ -7,6 +7,9 @@ module tinyfpga_top (
     inout logic  PIN_10,
     inout logic  PIN_11,
 
+    inout logic  PIN_12,
+    inout logic  PIN_13,
+
     // logic analyzer pins 0 - 3
     output logic PIN_1,
     output logic PIN_2,
@@ -25,9 +28,13 @@ module tinyfpga_top (
 
     top top_inst (
       .clk(CLK), .rst,
+
       .kbd_clk(PIN_11),
       .kbd_data(PIN_10),
-      .most_recent_kbd_data
+      .most_recent_kbd_data,
+
+      .mouse_clk(PIN_13),
+      .mouse_data(PIN_12)
     );
 
     assign {PIN_1, PIN_2, PIN_3, PIN_4} = {most_recent_kbd_data[0], most_recent_kbd_data[1], most_recent_kbd_data[2], most_recent_kbd_data[3]};

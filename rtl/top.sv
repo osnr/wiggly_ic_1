@@ -51,42 +51,45 @@ module top (
       );
 
 
+    typedef enum {READ, WRITE, DONE} mouse_opcode_t;
     typedef struct packed {
-        enum       {READ, WRITE, DONE} op;
+        mouse_opcode_t op;
         logic [7:0] code;
     } mouse_op_t;
-    mouse_op_t mouse_ops [0:5] = '{
-                             {WRITE, 8'hFF},
-                             {READ, 8'hFA},
-                             {READ, 8'hAA},
-                             {READ, 8'h00},
-                             {WRITE, 8'hF4},
-                             {DONE, 8'h00}
-                             };
-    typedef logic [$clog2($size(mouse_ops) + 1) - 1:0] mouse_ops_idx_t;
+
+    typedef logic [4:0] mouse_ops_idx_t;
     mouse_ops_idx_t mouse_ops_idx;
     mouse_ops_idx_t mouse_ops_idx_next;
-    
-    mouse_op_t mouse_op;
-    always_ff @(posedge clk)
-      mouse_op <= mouse_ops[mouse_ops_idx];
 
     always_ff @(posedge clk)
         if (rst) mouse_ops_idx <= 0;
         else mouse_ops_idx <= mouse_ops_idx_next;
+
+    mouse_op_t mouse_op;
+    always_comb
+      case (mouse_ops_idx)
+        5'd00: mouse_op = {WRITE, 8'hFF};
+        5'd01: mouse_op = {READ, 8'hFA};
+        5'd02: mouse_op = {READ, 8'hAA};
+        5'd03: mouse_op = {READ, 8'h00};
+        5'd04: mouse_op = {WRITE, 8'hF4};
+        5'd05: mouse_op = {DONE, 8'h00};
+        default: mouse_op = {DONE, 8'h00};
+      endcase
+
     always_comb begin
         mouse_ops_idx_next = mouse_ops_idx;
         mouse_wr_ps2 = '0;
         mouse_din = '0;
-        case (mouse_ops[mouse_ops_idx].op)
+        case (mouse_op.op)
           WRITE: begin
               mouse_wr_ps2 = '1;
-              mouse_din = mouse_ops[mouse_ops_idx].code;
-              // if (mouse_tx_done_tick)
+              mouse_din = mouse_op.code;
+              if (mouse_tx_done_tick)
                 mouse_ops_idx_next = mouse_ops_idx + 1;
           end
           READ:
-            // if (mouse_rx_done_tick && mouse_dout == mouse_ops[mouse_ops_idx].code)
+            if (mouse_rx_done_tick && mouse_dout == mouse_op.code)
               mouse_ops_idx_next = mouse_ops_idx + 1;
           DONE:
             ;
