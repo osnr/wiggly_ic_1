@@ -1,8 +1,19 @@
 `default_nettype none
 `timescale 1ns / 1ps
 
+interface vga_i (
+);
+endinterface // vga_i
+
 module top (
   input logic        clk, rst,
+                     
+  input wire         logic vga_clk_pix, // pixel clock
+  output logic       vga_hsync, vga_vsync,
+  output logic [1:0] vga_r, vga_g, vga_b, // 2-bit VGA r/g/b
+  // used by Verilator:
+  output logic [9:0] vga_sx, vga_sy, // horiz/vert screen position
+  output logic       vga_de,
 
   output logic [7:0] most_recent_kbd_data,
   
@@ -51,13 +62,13 @@ module top (
       );
 
 
-    typedef enum {READ, WRITE, DONE} mouse_opcode_t;
+    typedef enum {READ_EXPECT, WRITE, READ0, READ1, READ2} mouse_opcode_t;
+    typedef logic [4:0] mouse_ops_idx_t;
     typedef struct packed {
         mouse_opcode_t op;
         logic [7:0] code;
     } mouse_op_t;
 
-    typedef logic [4:0] mouse_ops_idx_t;
     mouse_ops_idx_t mouse_ops_idx;
     mouse_ops_idx_t mouse_ops_idx_next;
 
@@ -69,13 +80,27 @@ module top (
     always_comb
       case (mouse_ops_idx)
         5'd00: mouse_op = {WRITE, 8'hFF};
-        5'd01: mouse_op = {READ, 8'hFA};
-        5'd02: mouse_op = {READ, 8'hAA};
-        5'd03: mouse_op = {READ, 8'h00};
+        5'd01: mouse_op = {READ_EXPECT, 8'hFA};
+        5'd02: mouse_op = {READ_EXPECT, 8'hAA};
+        5'd03: mouse_op = {READ_EXPECT, 8'h00};
         5'd04: mouse_op = {WRITE, 8'hF4};
-        5'd05: mouse_op = {DONE, 8'h00};
-        default: mouse_op = {DONE, 8'h00};
+        5'd05: mouse_op = {READ_EXPECT, 8'hFA};
+
+        5'd06: mouse_op = {READ0, 8'h00};
+        5'd07: mouse_op = {READ1, 8'h00};
+        5'd08: mouse_op = {READ2, 8'h00};
+
+        default: mouse_op = {WRITE, 8'hFF}; // bad
       endcase
+
+    typedef struct packed {
+        logic        y_overflow, x_overflow;
+        logic        y_sign_bit, x_sign_bit;
+        logic        always_1;
+        logic        middle_btn, right_btn, left_btn;
+        logic [7:0]  x_movement, y_movement;
+    } mouse_packet_t;
+    mouse_packet_t mouse_packet;
 
     always_comb begin
         mouse_ops_idx_next = mouse_ops_idx;
@@ -88,11 +113,24 @@ module top (
               if (mouse_tx_done_tick)
                 mouse_ops_idx_next = mouse_ops_idx + 1;
           end
-          READ:
+          READ_EXPECT:
             if (mouse_rx_done_tick && mouse_dout == mouse_op.code)
               mouse_ops_idx_next = mouse_ops_idx + 1;
-          DONE:
-            ;
+          READ0:
+            if (mouse_rx_done_tick) begin
+                mouse_packet[23:16] = mouse_dout;
+                mouse_ops_idx_next = mouse_ops_idx + 1;
+            end
+          READ1:
+            if (mouse_rx_done_tick) begin
+                mouse_packet[15:8] = mouse_dout;
+                mouse_ops_idx_next = mouse_ops_idx + 1;
+            end
+          READ2:
+            if (mouse_rx_done_tick) begin
+                mouse_packet[7:0] = mouse_dout;
+                mouse_ops_idx_next = 5'd06; // HACK
+            end
         endcase
     end
     
@@ -104,5 +142,25 @@ module top (
         //   SENT_ENABLE_DATA_REPORTING: s[2] = "S";
         //   ACKNOWLEDGED_ENABLE_DATA_REPORTING: s[2] = "A";
         // endcase
+    end
+
+    // VGA
+    logic hsync, vsync;
+    simple_display_timings_480p display_timings_inst (
+        .clk_pix(vga_clk_pix), .rst,
+        .sx(vga_sx), .sy(vga_sy),
+        .hsync(vga_hsync), .vsync(vga_vsync), .de(vga_de)
+    );
+    
+    // 32 x 32 pixel square
+    logic q_draw;
+    always_comb q_draw = (vga_sx < 32 && vga_sy < 32) ? 1 : 0;
+    // always_comb q_draw = font[s[q_char[2:0]]][sy % 16][sx % 8];
+
+    // VGA output
+    always_ff @(posedge vga_clk_pix) begin
+        vga_r <= !vga_de ? 2'h0 : (q_draw ? 2'h0 : 2'h0);
+        vga_g <= !vga_de ? 2'h0 : (q_draw ? 2'h3 : 2'h0);
+        vga_b <= !vga_de ? 2'h0 : (q_draw ? 2'h0 : 2'h0);
     end
 endmodule
