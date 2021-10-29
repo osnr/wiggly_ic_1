@@ -153,8 +153,12 @@ module top (
           mouse_x <= 10'd100;
           mouse_y <= 10'd100;
       end else if (mouse_op.op == DONE_PACKET) begin
-          mouse_x <= mouse_x + 10'd1;
-          mouse_y <= mouse_y + 10'd1;
+          mouse_x <= mouse_packet.x_sign_bit ?
+                     mouse_x + ({'0, mouse_packet.x_movement} - (10'b100000000)) :
+                     mouse_x + {'0, mouse_packet.x_movement};
+          mouse_y <= mouse_packet.y_sign_bit ? // flip y axis
+                     mouse_y + {'0, mouse_packet.y_movement} :
+                     mouse_y + ({'0, mouse_packet.y_movement} - (10'b100000000));
       end
 
     // VGA

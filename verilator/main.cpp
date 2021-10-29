@@ -28,7 +28,7 @@ public:
         uint64_t _usleep_start = _time;                         \
         do {                                                    \
             co_await std::experimental::suspend_always{};       \
-        } while (_time < _usleep_start + (us) * 10);                  \
+        } while (_time < _usleep_start + (us) * 2);                  \
       } while (0)
 
     resumable_thing loop() {
@@ -195,9 +195,12 @@ int main(int argc, char* argv[]) {
                     cout << "up" << endl;
 
                 } else if (e.type == SDL_MOUSEMOTION) {
-                    mouse.send(0b00001000);
-                    mouse.send(1);
-                    mouse.send(1);
+                    
+                    mouse.send(0b00001000 |
+                               ((e.motion.xrel >> 31) << 4) |
+                               ((e.motion.yrel >> 31) << 5));
+                    mouse.send(e.motion.xrel & 0xFF);
+                    mouse.send(e.motion.yrel & 0xFF);
                     // cout << "mouse motion" << endl;
                 }
             }
