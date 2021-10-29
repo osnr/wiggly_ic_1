@@ -167,14 +167,10 @@ module top (
         .sx(vga_sx), .sy(vga_sy),
         .hsync(vga_hsync), .vsync(vga_vsync), .de(vga_de)
     );
-    
-    // always_comb q_draw = font[s[q_char[2:0]]][sy % 16][sx % 8];
-    // VGA output
     always_comb begin
         vga_r = '0; vga_g = '0; vga_b = '0;
         if (vga_de) begin
-            if ((vga_sx < 32 && vga_sy < 32) ||
-                (mouse_x <= vga_sx && vga_sx <= mouse_x + 10 &&
+            if ((mouse_x <= vga_sx && vga_sx <= mouse_x + 10 &&
                  mouse_y <= vga_sy && vga_sy <= mouse_y + 10)) begin
 
                 if (mouse_op.op == READ_PACKET0) begin
