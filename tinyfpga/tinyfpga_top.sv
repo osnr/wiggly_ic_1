@@ -38,7 +38,7 @@ module tinyfpga_top (
        .clk_locked
     );
 
-    top top_inst (
+    wiggly_ic_1 top_inst (
       .clk(CLK), .rst(!clk_locked),
 
       .kbd_clk(PIN_11),

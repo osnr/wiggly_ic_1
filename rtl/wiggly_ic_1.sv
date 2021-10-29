@@ -1,7 +1,7 @@
 `default_nettype none
 `timescale 1ns / 1ps
 
-module top (
+module wiggly_ic_1 (
   input logic        clk, rst,
                      
   input wire         logic vga_clk_pix, // pixel clock
