@@ -178,7 +178,7 @@ int main(int argc, char* argv[]) {
         // output
         vga(top);
 
-        if (_time % 200 == 0) {
+        if (_time % 20000 == 0) {
             char title_buf[500];
             snprintf(title_buf, sizeof(title_buf), "_time=%llu, most_recent_kbd_data=0x%x", _time, top->most_recent_kbd_data);
             SDL_SetWindowTitle(vga.sdl_window, title_buf);
@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
                     cout << "up" << endl;
 
                 } else if (e.type == SDL_MOUSEMOTION) {
-                    
+                    e.motion.yrel = -e.motion.yrel;
                     mouse.send(0b00001000 |
                                ((e.motion.xrel >> 31) << 4) |
                                ((e.motion.yrel >> 31) << 5));
