@@ -1,6 +1,6 @@
 #include <verilated.h>
 #include <verilated_vcd_c.h>
-#include "Vtop.h"
+#include "Vwiggly_ic_1.h"
 
 #include <iostream>
 #include <queue>
@@ -115,7 +115,7 @@ public:
                                                SDL_TEXTUREACCESS_TARGET, H_RES, V_RES));
     }
 
-    void operator()(Vtop* top) {
+    void operator()(Vwiggly_ic_1* top) {
         // update pixel if not in blanking interval
         if (top->vga_de) {
             Pixel* p = &screenbuffer[top->vga_sy*H_RES + top->vga_sx];
@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
     PS2Device kbd, mouse;
     Vga vga;
 
-    Vtop* top = new Vtop;
+    Vwiggly_ic_1* top = new Vwiggly_ic_1;
     top->trace(trace, 99);
     trace->open("trace.vcd");
 
