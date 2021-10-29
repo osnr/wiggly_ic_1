@@ -1,3 +1,9 @@
+// from https://github.com/projf/projf-explore/blob/8efd68404bdc9bcb1cdcb98d8658f91b7594146a/graphics/fpga-graphics/simple_display_timings_480p.sv
+
+// Project F: FPGA Graphics - Simple 640x480p60 Display Timings
+// (C)2021 Will Green, open source hardware released under the MIT License
+// Learn more at https://projectf.io
+
 `default_nettype none
 `timescale 1ns / 1ps
 

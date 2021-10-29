@@ -1,3 +1,10 @@
+// based on https://github.com/projf/projf-explore/blob/9b6e2c3821cf32b48a10629ed88f21b9a143fa7b/lib/clock/ice40/clock_gen_480p.sv
+// modified for TinyFPGA 16MHz clock & for CORE instead of PAD
+
+// Project F Library - 640x480p60 Clock Generation (iCE40)
+// (C)2021 Will Green, open source hardware released under the MIT License
+// Learn more at https://projectf.io
+
 `default_nettype none
 `timescale 1ns / 1ps
 

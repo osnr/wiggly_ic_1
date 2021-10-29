@@ -17,7 +17,9 @@ sim: obj_dir/main
 # TinyFPGA BX (iCE40) target
 # --------------------------
 
-%.json: tinyfpga/tinyfpga_top.sv $(SV_SRCS)
+TINYFPGA_SV_SRCS := $(shell find tinyfpga -name '*.sv')
+
+%.json: $(TINYFPGA_SV_SRCS) $(SV_SRCS)
 	yosys -p 'synth_ice40 -top tinyfpga_top -json $@' $^
 %.asc: %.json
 	nextpnr-ice40 --lp8k --package cm81 --json $< --pcf tinyfpga/pins.pcf --asc $@ --ignore-loops
