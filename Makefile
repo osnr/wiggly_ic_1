@@ -1,4 +1,4 @@
-.PHONY: sim prog
+.PHONY: sim prog harden
 
 SV_SRCS := $(shell find rtl -name '*.sv')
 
@@ -28,3 +28,11 @@ TINYFPGA_SV_SRCS := $(shell find tinyfpga -name '*.sv')
 
 prog: top.bin
 	tinyprog -p $<
+
+# efabless MPW3 shuttle (OpenLANE) target
+# ---------------------------------------
+
+harden: $(SV_SRCS)
+	$(shell make -s -C $$OPENLANE_ROOT __wiggly_harden \
+		--eval '__wiggly_harden:; echo $$(ENV_COMMAND)') \
+		./flow.tcl -design wiggly_ic_1
