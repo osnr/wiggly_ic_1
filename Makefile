@@ -1,4 +1,4 @@
-.PHONY: sim test prog harden summary
+.PHONY: verilator iverilog prog harden summary
 
 SV_SRCS := $(shell find rtl -name '*.sv')
 
@@ -18,11 +18,21 @@ obj_dir/main: verilator/main.cpp $(SV_SRCS)
 		-LDFLAGS "$(shell sdl2-config --libs)"
 	make -C ./obj_dir -f Vwiggly_ic_1.mk CXX=$(CXX)
 
-sim: obj_dir/main
+verilator: obj_dir/main
 	obj_dir/main
 
-test: obj_dir/main
-	obj_dir/main test
+# Icarus Verilog target
+# ---------------------
+
+# iverilog:
+# 	iverilog -g2009 -o sim.vvp -s wiggly_ic_1 $(SV_SRCS)
+# 	vvp sim.vvp
+
+cocotb:
+	make --file=$(shell cocotb-config --makefiles)/Makefile.sim \
+		SIM=icarus TOPLEVEL_LANG=verilog \
+		VERILOG_SOURCES="$(SV_SRCS)" \
+		TOPLEVEL=wiggly_ic_1 MODULE=test.test_wiggly_ic_1
 
 # TinyFPGA BX (iCE40) target
 # --------------------------
