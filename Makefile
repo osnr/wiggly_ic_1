@@ -1,4 +1,4 @@
-.PHONY: sim prog harden
+.PHONY: sim prog harden summary
 
 SV_SRCS := $(shell find rtl -name '*.sv')
 
@@ -32,7 +32,15 @@ prog: top.bin
 # efabless MPW3 shuttle (OpenLANE) target
 # ---------------------------------------
 
+# _horrible_ hack
 harden: $(SV_SRCS)
 	$(shell make -s -C $$OPENLANE_ROOT __wiggly_harden \
 		--eval '__wiggly_harden:; echo $$(ENV_COMMAND)') \
 		./flow.tcl -design wiggly_ic_1
+
+summary:
+	summary.py --design wiggly_ic_1 --summary
+timing:
+	cat runs/*-*/reports/synthesis/opensta.min_max.rpt
+magic:
+	cd runs/*-*/results/magic/ && DISPLAY=:0 magic wiggly_ic_1.gds
