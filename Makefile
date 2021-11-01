@@ -43,7 +43,7 @@ prog: top.bin
 # ---------------------------------------
 
 # parsing `ls` output... I guess will break if spaces in path?
-LATEST_RUN := runs/$(shell ls -t runs | head -n1)
+LATEST_RUN = runs/$(shell ls -t runs | head -n1)
 
 # _horrible_ hack to get ENV_COMMAND out of OpenLane Makefile
 harden: $(SV_SRCS)
@@ -57,3 +57,11 @@ print-timing:
 	cat $(LATEST_RUN)/reports/synthesis/opensta.min_max.rpt
 open-magic:
 	cd $(LATEST_RUN)/results/magic/ && DISPLAY=:0 magic wiggly_ic_1.gds
+
+# gate-level simulation (need to harden first)
+VERILOG = $$PDK_PATH/libs.ref/sky130_fd_sc_hd/verilog
+obj_dir_gate_level/main_gate_level: $(LATEST_RUN)/results/lvs/wiggly_ic_1.lvs.powered.v verilator/main.cpp
+	verilator --trace -I$(VERILOG) -cc $< --exe verilator/main.cpp --Mdir obj_dir_gate_level -o main_gate_level \
+		-CFLAGS "$(VERILATOR_CFLAGS)" \
+		-LDFLAGS "$(shell sdl2-config --libs)"
+	make -C ./obj_dir_gate_level -f Vwiggly_ic_1.mk CXX=$(CXX)
