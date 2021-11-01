@@ -9,7 +9,7 @@ VERILATOR_CFLAGS := $(shell sdl2-config --cflags) -g
 ifeq ($(CXX),g++)
 	VERILATOR_CFLAGS += -fcoroutines
 	CXX := g++-10
-else ifeq ($(CXX),clang)
+else ifeq ($(shell uname -s),Darwin) # hack to detect Clang++
 	VERILATOR_CFLAGS += -fcoroutines-ts
 endif
 obj_dir/main: verilator/main.cpp $(SV_SRCS)
