@@ -5,23 +5,24 @@ SV_SRCS := $(shell find rtl -name '*.sv')
 # Verilator target
 # ----------------
 
-VERILATOR_CFLAGS := $(shell sdl2-config --cflags) -g 
+VERILATOR_CFLAGS := $(shell sdl2-config --cflags) -g
 ifeq ($(CXX),g++)
-	VERILATOR_CFLAGS += -fcoroutines 
+	VERILATOR_CFLAGS += -fcoroutines
+	CXX := g++-10
 else ifeq ($(CXX),clang)
-	VERILATOR_CFLAGS += -fcoroutines-ts 
+	VERILATOR_CFLAGS += -fcoroutines-ts
 endif
 obj_dir/main: verilator/main.cpp $(SV_SRCS)
 	verilator --trace -Irtl -cc rtl/wiggly_ic_1.sv --exe verilator/main.cpp -o main \
 		-CFLAGS "$(VERILATOR_CFLAGS)" \
 		-LDFLAGS "$(shell sdl2-config --libs)"
-	make -C ./obj_dir -f Vwiggly_ic_1.mk CXX=g++-10
+	make -C ./obj_dir -f Vwiggly_ic_1.mk CXX=$(CXX)
 
 sim: obj_dir/main
 	obj_dir/main
 
 test: obj_dir/main
-	obj_dir/main
+	obj_dir/main test
 
 # TinyFPGA BX (iCE40) target
 # --------------------------
