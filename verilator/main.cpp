@@ -12,9 +12,9 @@
 using std::cout;
 using std::endl;
 
-uint64_t _time = 0; // in nanoseconds
+uint64_t _time = 0; // in nanoseconds?
 
-class PS2Device {
+class Ps2Device {
 private:
     std::queue<uint8_t> codes_to_send;
     resumable_thing co;
@@ -22,7 +22,7 @@ private:
 public:
     bool clk, data;
 
-    PS2Device() { co = this->loop(); };
+    Ps2Device() { co = this->loop(); };
     
     #define usleep(us)  do {\
         uint64_t _usleep_start = _time;                         \
@@ -135,6 +135,14 @@ public:
     }
 };
 
+class Testbench {
+public:
+    void operator()(Ps2Device& kbd, Ps2Device& mouse) {
+        // move mouse
+        // wait
+        // where is the mouse pointer?
+    }
+};
 
 int main(int argc, char* argv[]) {
     std::cout << "hello!" << std::endl;
@@ -143,8 +151,10 @@ int main(int argc, char* argv[]) {
     Verilated::traceEverOn(true);
     VerilatedVcdC* trace = new VerilatedVcdC;
 
-    PS2Device kbd, mouse;
+    Ps2Device kbd, mouse;
     Vga vga;
+
+    Testbench testbench;
 
     Vwiggly_ic_1* top = new Vwiggly_ic_1;
     top->trace(trace, 99);
@@ -165,6 +175,8 @@ int main(int argc, char* argv[]) {
     while (1) {
         _time++;
 
+        testbench(kbd, mouse);
+
         top->clk = 1; top->vga_clk_pix = 1;
         kbd(top->kbd_clk, top->kbd_data); // input
         mouse(top->mouse_clk, top->mouse_data); // input
@@ -180,7 +192,7 @@ int main(int argc, char* argv[]) {
 
         if (_time % 20000 == 0) {
             char title_buf[500];
-            snprintf(title_buf, sizeof(title_buf), "_time=%llu, most_recent_kbd_data=0x%x", _time, top->most_recent_kbd_data);
+            snprintf(title_buf, sizeof(title_buf), "_time=%lu, most_recent_kbd_data=0x%x", _time, top->most_recent_kbd_data);
             SDL_SetWindowTitle(vga.sdl_window, title_buf);
 
             SDL_Event e;
