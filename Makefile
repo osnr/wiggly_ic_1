@@ -29,18 +29,21 @@ TINYFPGA_SV_SRCS := $(shell find tinyfpga -name '*.sv')
 prog: top.bin
 	tinyprog -p $<
 
-# efabless MPW3 shuttle (OpenLANE) target
+# efabless MPW3 shuttle (OpenLane) target
 # ---------------------------------------
 
-# _horrible_ hack
+# parsing `ls` output... I guess will break if spaces in path?
+LATEST_RUN := runs/$(shell ls -t runs | head -n1)
+
+# _horrible_ hack to get ENV_COMMAND out of OpenLane Makefile
 harden: $(SV_SRCS)
 	$(shell make -s -C $$OPENLANE_ROOT __wiggly_harden \
 		--eval '__wiggly_harden:; echo $$(ENV_COMMAND)') \
 		./flow.tcl -design wiggly_ic_1
 
-summary:
+print-summary:
 	summary.py --design wiggly_ic_1 --summary
-timing:
-	cat runs/*-*/reports/synthesis/opensta.min_max.rpt
-magic:
-	cd runs/*-*/results/magic/ && DISPLAY=:0 magic wiggly_ic_1.gds
+print-timing:
+	cat $(LATEST_RUN)/reports/synthesis/opensta.min_max.rpt
+open-magic:
+	cd $(LATEST_RUN)/results/magic/ && DISPLAY=:0 magic wiggly_ic_1.gds
