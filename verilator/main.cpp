@@ -27,7 +27,7 @@ public:
     #define usleep(us)  do {\
         uint64_t _usleep_start = _time;                         \
         do {                                                    \
-            co_await std::experimental::suspend_always{};       \
+            co_await std::suspend_always{};                          \
         } while (_time < _usleep_start + (us) * 2);                  \
       } while (0)
 
