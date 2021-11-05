@@ -13,7 +13,7 @@ else ifeq ($(shell uname -s),Darwin) # hack to detect Clang++
 	VERILATOR_CFLAGS += -fcoroutines-ts
 endif
 obj_dir/main: verilator/main.cpp $(SV_SRCS)
-	verilator --trace -Irtl -cc rtl/wiggly_ic_1.sv --exe verilator/main.cpp -o main \
+	verilator -DSIM --trace -Irtl -cc rtl/wiggly_ic_1.sv --exe verilator/main.cpp -o main \
 		-CFLAGS "$(VERILATOR_CFLAGS)" \
 		-LDFLAGS "$(shell sdl2-config --libs)"
 	make -C ./obj_dir -f Vwiggly_ic_1.mk CXX=$(CXX)
@@ -29,6 +29,7 @@ verilator: obj_dir/main
 # 	vvp sim.vvp
 
 cocotb:
+	rm -rf sim_build
 	make --file=$(shell cocotb-config --makefiles)/Makefile.sim \
 		SIM=icarus TOPLEVEL_LANG=verilog \
 		VERILOG_SOURCES="$(SV_SRCS)" \
@@ -53,7 +54,7 @@ prog: top.bin
 # ---------------------------------------
 
 # parsing `ls` output... I guess will break if spaces in path?
-LATEST_RUN = runs/$(shell ls -t runs | head -n1)
+LATEST_RUN := runs/$(shell ls -t runs | head -n1)
 
 # _horrible_ hack to get ENV_COMMAND out of OpenLane Makefile
 harden: $(SV_SRCS)

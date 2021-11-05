@@ -1,5 +1,11 @@
 `default_nettype none
 `timescale 1ns / 1ps
+`ifdef COCOTB_SIM
+ `define SIM
+`endif
+`ifdef VERILATOR
+ `define SIM
+`endif
 
 module wiggly_ic_1 (
   input logic        clk, rst,
@@ -49,7 +55,8 @@ module wiggly_ic_1 (
     // outputs of the fsm
     logic       mouse_wr_ps2;
     logic [7:0] mouse_din;
-`ifdef VERILATOR
+
+`ifdef SIM
     assign mouse_tx_idle = '1;
 `else
     ps2tx mouse_tx (
@@ -73,7 +80,7 @@ module wiggly_ic_1 (
     mouse_ops_idx_t mouse_ops_idx_next;
     always_ff @(posedge clk)
         if (rst)
-          `ifdef VERILATOR
+          `ifdef SIM
             mouse_ops_idx <= 5'd06; // skip to reading packets
           `else
             mouse_ops_idx <= '0;
