@@ -33,11 +33,9 @@ module wiggly_ic_1 (
       .rx_idle(), .rx_done_tick(kbd_rx_done_tick),
       .dout(kbd_dout)
       );
-    always_ff @(posedge clk) begin
-        if (kbd_rx_done_tick) begin
-            most_recent_kbd_data <= kbd_dout;
-        end
-    end
+    always_ff @(posedge clk)
+      if (kbd_rx_done_tick)
+        most_recent_kbd_data <= kbd_dout;
 
     // PS/2 mouse
     logic [7:0] mouse_dout;
