@@ -11,10 +11,13 @@ async def test_wiggly_ic_1(dut):
     # FIXME: reset
     dut.rst.value = 1
     dut.clk.value = 0
+    dut.vga_clk_pix.value = 0
     await Timer(1, units="ns")
     dut.clk.value = 1
+    dut.vga_clk_pix.value = 1
     await Timer(1, units="ns")
     dut.clk.value = 0
+    dut.vga_clk_pix.value = 0
     await Timer(1, units="ns")
     dut.rst.value = 0
 
@@ -24,7 +27,7 @@ async def test_wiggly_ic_1(dut):
     vga_clk_pix = Clock(dut.vga_clk_pix, 40, units="ns") # 40ns period = 25MHz
     cocotb.start_soon(vga_clk_pix.start())
 
-    await Timer(50, units="ns")  # wait a bit
+    await Timer(500, units="ns")  # wait a bit
 
     print(dut.vga_de)
     

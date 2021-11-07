@@ -22,6 +22,15 @@ module wiggly_ic_1 (
   inout logic        kbd_clk, kbd_data,
   inout logic        mouse_clk, mouse_data
   );
+
+`ifdef COCOTB_SIM
+    initial begin
+        $dumpfile ("cocotb.vcd");
+        $dumpvars (0, wiggly_ic_1);
+        #1;
+    end
+`endif
+
     // PS/2 keyboard input
     logic [7:0]      kbd_dout;
     logic            kbd_rx_done_tick;
