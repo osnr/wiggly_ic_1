@@ -1,14 +1,24 @@
 import random
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import FallingEdge, Timer
+from cocotb.triggers import FallingEdge, RisingEdge, Timer
+
+import png
+
+from collections import namedtuple
 
 H_RES = 640
 V_RES = 480
 
+def write_png(filename, screenbuffer):
+    f = open(filename, 'wb')
+    w = png.Writer(H_RES, V_RES, greyscale=False)
+    w.write_array(f, screenbuffer)
+    f.close()
+
 @cocotb.test()
 async def test_wiggly_ic_1(dut):
-    # FIXME: reset
+    # reset (need to trigger all clocks)
     dut.rst.value = 1
     dut.clk.value = 0
     dut.vga_clk_pix.value = 0
@@ -29,15 +39,26 @@ async def test_wiggly_ic_1(dut):
 
     await Timer(500, units="ns")  # wait a bit
 
-    print(dut.vga_de)
-    
-    screenbuffer = []
-    for i in range(10):
-        print(i)
+    screenbuffer = [0]*(H_RES*V_RES*3)
+    frame_num = 0
+    while frame_num < 10:
+        await RisingEdge(dut.vga_vsync)
+        
+        print(frame_num)
+
         while True:
             await FallingEdge(dut.vga_clk_pix)
-            if dut.vga_de.value == 1: break
-    
+            if dut.vga_de.value == 1:
+                i = (dut.vga_sy.value*H_RES + dut.vga_sx.value) * 3
+                screenbuffer[i] = dut.vga_r.value << 6
+                screenbuffer[i+1] = dut.vga_g.value << 6
+                screenbuffer[i+2] = dut.vga_b.value << 6
+            if dut.vga_vsync.value == 0:
+                break
+
+        write_png('frame' + str(frame_num) + '.png', screenbuffer)
+        frame_num += 1
+
     # render VGA image
     # wait for vsync
     # walk through... draw a few frames to a folder
