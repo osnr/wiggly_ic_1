@@ -50,8 +50,6 @@ async def test_wiggly_ic_1(dut):
     while frame_num < 10:
         await RisingEdge(dut.vga_vsync)
         
-        info('frame %d', frame_num)
-
         while True:
             await FallingEdge(dut.vga_clk_pix)
             if dut.vga_de.value == 1:
@@ -63,21 +61,11 @@ async def test_wiggly_ic_1(dut):
             if dut.vga_vsync.value == 0:
                 break
 
-        # assert screenbuffer[index(0, 0)] == 0
-        # assert screenbuffer[index(dut.mouse_x.value, dut.mouse_y.value)] + 2 != 0
+        assert screenbuffer[index(0, 0)] == 0
+        assert screenbuffer[index(dut.mouse_x.value, dut.mouse_y.value)] + 2 != 0 # cursor
 
+        info('frame %d', frame_num)
         write_png('frame' + str(frame_num) + '.png', screenbuffer)
         frame_num += 1
 
-    # render VGA image
-    # wait for vsync
-    # walk through... draw a few frames to a folder
-    # automatic test where the cursor is
-    # move cursor
-    # compare to internal cursor pos
-    
-    # for i in range(10):
-    #     val = random.randint(0, 1)
-    #     # dut.d.value = val  # Assign the random value val to the input port d
-    #     await FallingEdge(dut.clk)
-    #     # assert dut.q.value == val, "output q was incorrect on the {}th cycle".format(i)
+    # TODO: move the mouse, check for new cursor position

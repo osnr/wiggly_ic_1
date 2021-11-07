@@ -27,7 +27,7 @@ module wiggly_ic_1 (
     initial begin
         $dumpfile ("cocotb.vcd");
         $dumpvars (0, wiggly_ic_1);
-        #1;
+        // #1;
     end
 `endif
 
