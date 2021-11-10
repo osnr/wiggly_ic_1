@@ -34,10 +34,10 @@ async def test_wiggly_ic_1(dut):
     dut.rst.value = 0
 
     clk = Clock(dut.clk, 60, units="ns")  # 60ns period = 16.6MHz
-    cocotb.start_soon(clk.start())  # Start the clock
+    cocotb.fork(clk.start())  # Start the clock
 
     vga_clk_pix = Clock(dut.vga_clk_pix, 40, units="ns") # 40ns period = 25MHz
-    cocotb.start_soon(vga_clk_pix.start())
+    cocotb.fork(vga_clk_pix.start())
 
     info("hello")
 

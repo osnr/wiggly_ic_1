@@ -29,18 +29,14 @@ verilator: obj_dir/main
 # 	vvp sim.vvp
 
 test-icarus:
-	rm -rf sim_build
-	make --file=$(shell cocotb-config --makefiles)/Makefile.sim \
-		SIM=icarus TOPLEVEL_LANG=verilog \
-		VERILOG_SOURCES="$(SV_SRCS)" \
-		TOPLEVEL=wiggly_ic_1 MODULE=test.test_wiggly_ic_1
+	cd test; make
 
-test-verilator:
-	rm -rf sim_build
-	make --file=$(shell cocotb-config --makefiles)/Makefile.sim \
-		SIM=verilator TOPLEVEL_LANG=verilog \
-		VERILOG_SOURCES="$(SV_SRCS)" \
-		TOPLEVEL=wiggly_ic_1 MODULE=test.test_wiggly_ic_1
+# test-verilator:
+# 	rm -rf sim_build
+# 	make --file=$(shell cocotb-config --makefiles)/Makefile.sim \
+# 		SIM=verilator TOPLEVEL_LANG=verilog \
+# 		VERILOG_SOURCES="$(SV_SRCS)" \
+# 		TOPLEVEL=wiggly_ic_1 MODULE=test.test_wiggly_ic_1
 
 # TinyFPGA BX (iCE40) target
 # --------------------------
