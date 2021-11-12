@@ -187,8 +187,9 @@ module wiggly_ic_1 (
         .hsync(vga_hsync), .vsync(vga_vsync), .de(vga_de)
     );
     always_comb begin
-        vga_r = 2'h3; vga_g = 2'h0; vga_b = 2'h0;
+        vga_r = 2'h0; vga_g = 2'h0; vga_b = 2'h0;
         if (vga_de) begin
+            vga_r = 2'h3; vga_g = 2'h3; vga_b = 2'h3;
             if ((mouse_x <= vga_sx && vga_sx <= mouse_x + 10 &&
                  mouse_y <= vga_sy && vga_sy <= mouse_y + 10)) begin
 
