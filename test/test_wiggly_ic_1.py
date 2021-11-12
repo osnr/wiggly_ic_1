@@ -61,11 +61,12 @@ async def test_wiggly_ic_1(dut):
             if dut.vga_vsync.value == 0:
                 break
 
+        info('frame %d', frame_num)
+        write_png('frame' + str(frame_num) + '.png', screenbuffer)
+
         assert screenbuffer[index(0, 0)] == 0
         assert screenbuffer[index(dut.mouse_x.value, dut.mouse_y.value)] + 2 != 0 # cursor
 
-        info('frame %d', frame_num)
-        write_png('frame' + str(frame_num) + '.png', screenbuffer)
         frame_num += 1
 
     # TODO: move the mouse, check for new cursor position
