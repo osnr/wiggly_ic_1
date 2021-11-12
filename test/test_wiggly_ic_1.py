@@ -64,8 +64,13 @@ async def test_wiggly_ic_1(dut):
         info('frame %d', frame_num)
         write_png('frame' + str(frame_num) + '.png', screenbuffer)
 
-        assert screenbuffer[index(0, 0)] == 0
-        assert screenbuffer[index(dut.mouse_x.value, dut.mouse_y.value)] + 2 != 0 # cursor
+        assert screenbuffer[index(0, 0)] == 0b11 << 6
+
+         # blue cursor
+        cursor = index(dut.mouse_x.value, dut.mouse_y.value)
+        assert screenbuffer[cursor] == 0b00 << 6
+        assert screenbuffer[cursor + 1] == 0b00 << 6
+        assert screenbuffer[cursor + 2] == 0b11 << 6
 
         frame_num += 1
 
