@@ -5,11 +5,15 @@
 
 module ps2tx
    (
-    input  logic clk, reset,
-    input  logic wr_ps2, rx_idle,
-    input  logic [7:0] din,
-    output logic tx_idle, tx_done_tick,
-    inout  logic ps2d, ps2c // was `inout tri`
+    input logic       clk, reset,
+    input logic       wr_ps2, rx_idle,
+    input logic [7:0] din,
+    output logic      tx_idle, tx_done_tick,
+
+    // was `inout tri ps2c, ps2d`
+    input logic       ps2c,
+    output logic      ps2c_out, ps2d_out,
+    output logic      tri_c, tri_d // HIGH when we're transmitting
    );
 
    // fsm state type 
@@ -25,8 +29,8 @@ module ps2tx
    logic [8:0] b_reg, b_next;
    logic [12:0] c_reg, c_next;
    logic par, fall_edge;
-   logic ps2c_out, ps2d_out;
-   logic tri_c, tri_d;
+   // logic ps2c_out, ps2d_out;
+   // logic tri_c, tri_d;
 
    // body
    //*****************************************************************
@@ -127,6 +131,6 @@ module ps2tx
       endcase
    end
    // tristate buffers
-   assign ps2c = (tri_c) ? ps2c_out : 1'bz;
-   assign ps2d = (tri_d) ? ps2d_out : 1'bz;
+   // assign ps2c = (tri_c) ? ps2c_out : 1'bz;
+   // assign ps2d = (tri_d) ? ps2d_out : 1'bz;
 endmodule // ps2tx

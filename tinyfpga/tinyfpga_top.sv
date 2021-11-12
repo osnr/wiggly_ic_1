@@ -38,6 +38,10 @@ module tinyfpga_top (
        .clk_locked
     );
 
+    logic mouse_clk_out, mouse_data_out;
+    logic mouse_clk_oe, mouse_data_oe;
+    assign PIN_12 = mouse_data_oe ? mouse_data_out : 1'bz;
+    assign PIN_13 = mouse_clk_oe ? mouse_clk_out : 1'bz;
     wiggly_ic_1 top_inst (
       .clk(CLK), .rst(!clk_locked),
 
@@ -45,8 +49,10 @@ module tinyfpga_top (
       .kbd_data(PIN_10),
       .most_recent_kbd_data,
 
-      .mouse_clk(PIN_13),
-      .mouse_data(PIN_12),
+      .mouse_clk_in(PIN_13),
+      .mouse_data_in(PIN_12),
+      .mouse_clk_out, .mouse_data_out,
+      .mouse_clk_oe, .mouse_data_oe,
 
       .vga_clk_pix(clk_pix),
       .vga_r({PIN_14, PIN_15}),

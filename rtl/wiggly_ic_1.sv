@@ -19,8 +19,11 @@ module wiggly_ic_1 (
 
   output logic [7:0] most_recent_kbd_data,
   
-  inout logic        kbd_clk, kbd_data,
-  inout logic        mouse_clk, mouse_data
+  input logic        kbd_clk, kbd_data,
+
+  input logic        mouse_clk_in, mouse_data_in,
+  output logic       mouse_clk_out, mouse_data_out,
+  output logic       mouse_clk_oe, mouse_data_oe // HIGH when we want to output       
   );
 
 `ifdef COCOTB_SIM
@@ -52,7 +55,7 @@ module wiggly_ic_1 (
     logic       mouse_rx_idle, mouse_tx_idle;
     ps2rx mouse_rx (
       .clk(clk), .reset(rst),
-      .ps2d(mouse_data), .ps2c(mouse_clk),
+      .ps2d(mouse_data_in), .ps2c(mouse_clk_in),
       .rx_en(mouse_tx_idle),
 
       .rx_idle(mouse_rx_idle), .rx_done_tick(mouse_rx_done_tick),
@@ -70,7 +73,9 @@ module wiggly_ic_1 (
       .clk(clk), .reset(rst),
       .wr_ps2(mouse_wr_ps2), .rx_idle(mouse_rx_idle),
       .din(mouse_din),
-      .ps2d(mouse_data), .ps2c(mouse_clk),
+      .ps2c(mouse_clk_in),
+      .ps2c_out(mouse_clk_out), .ps2d_out(mouse_data_out),
+      .tri_c(mouse_clk_oe), .tri_d(mouse_data_oe),
       .tx_idle(mouse_tx_idle), .tx_done_tick(mouse_tx_done_tick)
       );
 `endif
