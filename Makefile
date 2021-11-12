@@ -1,4 +1,4 @@
-.PHONY: verilator iverilog prog harden summary
+.PHONY: verilator coco_test prog harden summary
 
 SV_SRCS := $(shell find rtl -name '*.sv')
 
@@ -28,7 +28,7 @@ verilator: obj_dir/main
 # 	iverilog -g2009 -o sim.vvp -s wiggly_ic_1 $(SV_SRCS)
 # 	vvp sim.vvp
 
-test-icarus:
+coco_test:
 	cd test; make
 
 # test-verilator:
@@ -65,17 +65,17 @@ harden: $(SV_SRCS)
 		--eval '__wiggly_harden:; echo $$(ENV_COMMAND)') \
 		./flow.tcl -design wiggly_ic_1
 
-print-summary:
+print_summary:
 	summary.py --design wiggly_ic_1 --summary
-print-timing:
+print_timing:
 	cat $(LATEST_RUN)/reports/synthesis/opensta.min_max.rpt
-open-magic:
+open_magic:
 	cd $(LATEST_RUN)/results/magic/ && DISPLAY=:0 magic wiggly_ic_1.gds
 
-# gate-level simulation (need to harden first)
-VERILOG = $$PDK_PATH/libs.ref/sky130_fd_sc_hd/verilog
-obj_dir_gate_level/main_gate_level: $(LATEST_RUN)/results/lvs/wiggly_ic_1.lvs.powered.v verilator/main.cpp
-	verilator --trace -I$(VERILOG) -cc $< --exe verilator/main.cpp --Mdir obj_dir_gate_level -o main_gate_level \
-		-CFLAGS "$(VERILATOR_CFLAGS)" \
-		-LDFLAGS "$(shell sdl2-config --libs)"
-	make -C ./obj_dir_gate_level -f Vwiggly_ic_1.mk CXX=$(CXX)
+# WIP gate-level simulation (need to harden first)
+# VERILOG = $$PDK_PATH/libs.ref/sky130_fd_sc_hd/verilog
+# obj_dir_gate_level/main_gate_level: $(LATEST_RUN)/results/lvs/wiggly_ic_1.lvs.powered.v verilator/main.cpp
+# 	verilator --trace -I$(VERILOG) -cc $< --exe verilator/main.cpp --Mdir obj_dir_gate_level -o main_gate_level \
+# 		-CFLAGS "$(VERILATOR_CFLAGS)" \
+# 		-LDFLAGS "$(shell sdl2-config --libs)"
+# 	make -C ./obj_dir_gate_level -f Vwiggly_ic_1.mk CXX=$(CXX)

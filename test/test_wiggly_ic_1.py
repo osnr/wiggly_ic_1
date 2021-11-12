@@ -47,7 +47,7 @@ async def test_wiggly_ic_1(dut):
     def index(x, y): return (y*H_RES + x) * 3
 
     frame_num = 0
-    while frame_num < 10:
+    while frame_num < 2:
         await RisingEdge(dut.vga_vsync)
         
         while True:
