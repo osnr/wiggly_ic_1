@@ -179,7 +179,7 @@ int main(int argc, char* argv[]) {
 
         top->clk = 1; top->vga_clk_pix = 1;
         kbd(top->kbd_clk, top->kbd_data); // input
-        mouse(top->mouse_clk, top->mouse_data); // input
+        mouse(top->mouse_clk_out, top->mouse_data_out); // input
         top->eval();
         trace->dump((vluint64_t) (10*_time));
 
