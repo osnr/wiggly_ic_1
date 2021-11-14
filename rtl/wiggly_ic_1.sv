@@ -186,7 +186,7 @@ module wiggly_ic_1 (
         .sx(vga_sx), .sy(vga_sy),
         .hsync(vga_hsync), .vsync(vga_vsync), .de(vga_de)
     );
-    always_comb begin
+    always_ff @(posedge vga_clk_pix) begin
         vga_r = 2'h0; vga_g = 2'h0; vga_b = 2'h0;
         if (vga_de) begin
             vga_r = 2'h3; vga_g = 2'h3; vga_b = 2'h3;
