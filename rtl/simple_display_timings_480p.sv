@@ -17,6 +17,17 @@ module simple_display_timings_480p (
     output      logic de         // data enable (low in blanking interval)
     );
 
+`ifdef SMALL
+    parameter HA_END = 20;
+    parameter HS_STA = HA_END + 16;
+    parameter HS_END = HS_STA + 6;
+    parameter LINE = 40;
+
+    parameter VA_END = 16;
+    parameter VS_STA = VA_END + 6;
+    parameter VS_END = VS_STA + 2;
+    parameter SCREEN = 28;
+`else
     // horizontal timings
     parameter HA_END = 639;           // end of active pixels
     parameter HS_STA = HA_END + 16;   // sync starts after front porch
@@ -28,6 +39,7 @@ module simple_display_timings_480p (
     parameter VS_STA = VA_END + 10;   // sync starts after front porch
     parameter VS_END = VS_STA + 2;    // sync ends
     parameter SCREEN = 524;           // last line on screen (after back porch)
+`endif
 
     always_comb begin
         hsync = ~(sx >= HS_STA && sx < HS_END);  // invert: negative polarity

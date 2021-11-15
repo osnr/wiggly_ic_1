@@ -29,7 +29,12 @@ verilator: obj_dir/main
 # 	vvp sim.vvp
 
 coco_test:
+	rm -rf test/sim_build
 	cd test; make
+
+coco_test_small:
+	rm -rf test/sim_build
+	cd test; make COMPILE_ARGS=-DSMALL
 
 # test-verilator:
 # 	rm -rf sim_build
