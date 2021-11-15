@@ -23,7 +23,7 @@ module simple_display_timings_480p (
     parameter HS_END = HS_STA + 6;
     parameter LINE = 40;
 
-    parameter VA_END = 16;
+    parameter VA_END = 18;
     parameter VS_STA = VA_END + 6;
     parameter VS_END = VS_STA + 2;
     parameter SCREEN = 28;
