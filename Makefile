@@ -28,13 +28,15 @@ verilator: obj_dir/main
 # 	iverilog -g2009 -o sim.vvp -s wiggly_ic_1 $(SV_SRCS)
 # 	vvp sim.vvp
 
-coco_test:
-	rm -rf test/sim_build
-	cd test; make
+coco_test_all: coco_test_small coco_test
 
 coco_test_small:
 	rm -rf test/sim_build
 	cd test; make COMPILE_ARGS="-DSMALL -g2005-sv"
+
+coco_test:
+	rm -rf test/sim_build
+	cd test; make
 
 # test-verilator:
 # 	rm -rf sim_build
