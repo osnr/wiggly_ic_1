@@ -34,7 +34,7 @@ coco_test:
 
 coco_test_small:
 	rm -rf test/sim_build
-	cd test; make COMPILE_ARGS=-DSMALL
+	cd test; make COMPILE_ARGS="-DSMALL -g2005-sv"
 
 # test-verilator:
 # 	rm -rf sim_build

@@ -169,8 +169,8 @@ module wiggly_ic_1 (
     logic [9:0] mouse_x, mouse_y;
     always_ff @(posedge clk)
       if (rst) begin
-          mouse_x <= 10'd100;
-          mouse_y <= 10'd100;
+          mouse_x <= 10'd6;
+          mouse_y <= 10'd6;
       end else if (mouse_op.op == DONE_PACKET) begin
           mouse_x <= mouse_packet.x_sign_bit ?
                      (mouse_x + ({'0, mouse_packet.x_movement} - (10'b100000000))) :
