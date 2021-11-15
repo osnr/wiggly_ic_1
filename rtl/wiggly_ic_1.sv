@@ -27,11 +27,11 @@ module wiggly_ic_1 (
   );
 
 `ifdef COCOTB_SIM
-    initial begin
-        $dumpfile ("cocotb.vcd");
-        $dumpvars (0, wiggly_ic_1);
-        // #1;
-    end
+    // initial begin
+    //     $dumpfile ("cocotb.vcd");
+    //     $dumpvars (0, wiggly_ic_1);
+    //     // #1;
+    // end
 `endif
 
     // PS/2 keyboard input
